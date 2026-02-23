@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <!-- Script Face Mesh DIHAPUS untuk performa super ringan -->
 
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
@@ -32,54 +32,35 @@
 
     <div id="ui-layer" class="flex flex-col justify-center items-center no-select">
         
+        <!-- MENU UTAMA -->
         <div id="start-menu" class="pointer-events-auto bg-gray-900 bg-opacity-90 p-8 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-md w-full mx-4 transition-all duration-500">
-            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400 mb-2">
                 TANGKAP OBJEK
             </h1>
-            <p class="text-gray-400 text-sm mb-6 uppercase tracking-widest font-semibold">Kamera Interaktif</p>
+            <p class="text-gray-400 text-sm mb-6 uppercase tracking-widest font-semibold">Kamera Interaktif (Versi Ringan)</p>
             
             <div class="text-left text-gray-300 mb-6 space-y-2 text-sm bg-gray-800 p-4 rounded-xl">
-                <p>⏱️ Anda memiliki waktu <span class="text-yellow-400 font-bold">3 Menit</span>.</p>
-                <p>🎯 Pilih mode permainan dan target yang ingin ditangkap untuk <span class="text-green-400 font-bold">+10 Poin</span>.</p>
-                <p>💥 Hati-hati! Menyentuh objek yang salah akan mengurangi <span class="text-red-500 font-bold">-10 Poin</span>.</p>
-                <p>⚙️ <span class="text-green-400 font-bold">Pilih Kontrol Unikmu!</span> Mainkan dengan jari, senyuman, kedipan mata, atau buka mulut.</p>
-                <p>🔊 Pastikan volume Anda menyala untuk efek suara!</p>
+                <p>⏱️ Waktu Bermain: <span class="text-yellow-400 font-bold">3 Menit</span>.</p>
+                <p>🎯 Tangkap target yang benar untuk <span class="text-green-400 font-bold">+10 Poin</span>.</p>
+                <p>💥 Hati-hati objek pengecoh! Salah sentuh <span class="text-red-500 font-bold">-10 Poin</span>.</p>
+                <p>👆 <span class="text-blue-400 font-bold">Kontrol Jari:</span> Tunjuk untuk menangkap, dan angkat 2 jari lurus (✌️) untuk menonaktifkan kursor.</p>
             </div>
 
-            <button id="start-btn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-6 rounded-2xl shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all transform hover:scale-105 active:scale-95 text-xl mb-4">
+            <button id="start-btn" class="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-500 hover:to-green-500 text-white font-bold py-4 px-6 rounded-2xl shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all transform hover:scale-105 active:scale-95 text-xl mb-4">
                 Mulai (Layar Penuh)
             </button>
 
+            <!-- Keterangan Pembuat -->
             <div class="mt-4 pt-4 border-t border-gray-700 text-sm text-gray-400">
                 <p>Dibuat oleh <span class="font-bold text-gray-200">Wahyudi</span> dengan menggunakan <span class="font-bold text-gray-200">Gemini AI</span></p>
-                <p class="mt-2 mb-3 text-xs">Jika ada saran, silakan kirim pesan melalui WhatsApp:</p>
-                <a href="https://wa.me/6281336578058" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-2 px-4 rounded-xl transition-all shadow-lg transform hover:scale-105 pointer-events-auto">
+                <a href="https://wa.me/6281336578058" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-2 px-4 rounded-xl transition-all shadow-lg transform hover:scale-105 pointer-events-auto">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                     0813-3657-8058
                 </a>
             </div>
         </div>
 
-        <div id="control-selection" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-6 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-lg w-full mx-4 transition-all duration-500 flex-col">
-            <h2 class="text-2xl font-bold text-white mb-2">Metode Kontrol</h2>
-            <p class="text-gray-400 text-sm mb-6">Bagaimana cara Anda ingin menangkap objek?</p>
-            
-            <div class="grid grid-cols-1 gap-3 mb-4">
-                <button onclick="selectControl(1)" class="bg-gray-800 hover:bg-blue-600 border border-gray-600 text-white font-bold py-3 px-4 rounded-xl text-left transition-all">
-                    👆 <span class="text-lg">Sentuhan Normal (Paling Ringan)</span><br><span class="text-xs font-normal text-gray-300">Tunjuk untuk klik, nonaktifkan dengan 2 jari lurus (✌️).</span>
-                </button>
-                <button onclick="selectControl(2)" class="bg-gray-800 hover:bg-blue-600 border border-gray-600 text-white font-bold py-3 px-4 rounded-xl text-left transition-all">
-                    😁 <span class="text-lg">Senyum untuk Klik</span><br><span class="text-xs font-normal text-gray-300">Arahkan jari telunjuk, lalu tersenyum lebar untuk menangkap.</span>
-                </button>
-                <button onclick="selectControl(3)" class="bg-gray-800 hover:bg-blue-600 border border-gray-600 text-white font-bold py-3 px-4 rounded-xl text-left transition-all">
-                    😮 <span class="text-lg">Buka Mulut untuk Klik</span><br><span class="text-xs font-normal text-gray-300">Arahkan jari telunjuk, lalu buka mulut Anda untuk menangkap.</span>
-                </button>
-                <button onclick="selectControl(4)" class="bg-gray-800 hover:bg-blue-600 border border-gray-600 text-white font-bold py-3 px-4 rounded-xl text-left transition-all">
-                    😉 <span class="text-lg">Kedip untuk Klik</span><br><span class="text-xs font-normal text-gray-300">Arahkan jari telunjuk, lalu kedipkan mata Anda untuk menangkap.</span>
-                </button>
-            </div>
-        </div>
-
+        <!-- MENU PILIH MODE -->
         <div id="mode-selection" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-6 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-lg w-full mx-4 transition-all duration-500 flex-col">
             <h2 class="text-2xl font-bold text-white mb-2">Pilih Mode Permainan</h2>
             <p class="text-gray-400 text-sm mb-6">Apa yang ingin Anda tangkap hari ini?</p>
@@ -100,6 +81,7 @@
             </div>
         </div>
 
+        <!-- MENU PILIH TARGET -->
         <div id="target-selection" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-6 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-xl w-full mx-4 transition-all duration-500 max-h-[90vh] flex-col">
             <h2 id="target-title" class="text-2xl font-bold text-white mb-2">Pilih Target Anda</h2>
             <p class="text-gray-400 text-sm mb-4">Pilih satu target utama untuk ditangkap.</p>
@@ -110,7 +92,8 @@
             <p id="loading-text" class="text-yellow-400 mt-2 text-sm hidden font-semibold animate-pulse">Menghidupkan Kamera & AI (Mohon tunggu)...</p>
         </div>
 
-        <div id="hud" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start hidden">
+        <!-- HUD GAME -->
+        <div id="hud" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start hidden pointer-events-none">
             <div class="flex gap-4">
                 <div class="bg-blue-900 bg-opacity-80 backdrop-blur-md rounded-2xl p-4 border border-blue-500 shadow-lg min-w-[100px] text-center flex flex-col items-center justify-center">
                     <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest mb-1">TARGET</p>
@@ -131,6 +114,7 @@
             </div>
         </div>
 
+        <!-- GAME OVER -->
         <div id="game-over" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-8 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-md w-full mx-4 transform scale-105">
             <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500 mb-2">WAKTU HABIS!</h1>
             <p class="text-gray-300 mb-6 text-lg">Permainan Selesai.</p>
@@ -145,6 +129,7 @@
 
     </div>
 
+    <!-- Elemen Media -->
     <video id="webcam" autoplay playsinline></video>
     <canvas id="game-canvas"></canvas>
 
@@ -154,7 +139,6 @@
         const canvasCtx = canvasElement.getContext('2d');
         
         const startMenu = document.getElementById('start-menu');
-        const controlSelectionMenu = document.getElementById('control-selection');
         const modeSelectionMenu = document.getElementById('mode-selection');
         const targetSelectionMenu = document.getElementById('target-selection');
         const targetGrid = document.getElementById('target-grid');
@@ -169,6 +153,7 @@
         const finalScoreDisplay = document.getElementById('final-score');
         const backBtn = document.getElementById('back-btn');
 
+        // AUDIO
         let audioCtx;
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -177,10 +162,8 @@
 
         function playCorrectSound() {
             if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-            osc.type = 'sine'; const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.type = 'sine'; const now = audioCtx.currentTime;
             osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.1); osc.frequency.setValueAtTime(783.99, now + 0.2);
             gainNode.gain.setValueAtTime(0, now); gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
             osc.start(now); osc.stop(now + 0.4);
@@ -188,15 +171,14 @@
 
         function playWrongSound() {
             if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-            osc.type = 'square'; const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.type = 'square'; const now = audioCtx.currentTime;
             osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
             gainNode.gain.setValueAtTime(0.5, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
             osc.start(now); osc.stop(now + 0.4);
         }
 
+        // DATA
         const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
         const NUMBERS = Array.from({length: 31}, (_, i) => i.toString());
         const COLORS = [
@@ -205,19 +187,10 @@
             { id: 'Abu-abu', hex: '#6b7280' }, { id: 'Coklat', hex: '#78350f' }
         ];
 
-        let currentMode = ''; 
-        let isGameRunning = false;
-        let score = 0;
-        let targetData = null; 
-        let timeRemaining = 180; 
+        let currentMode = ''; let isGameRunning = false; let score = 0; let targetData = null; let timeRemaining = 180; 
         let bubbles = []; let particles = []; let indexFingerTips = []; 
         let lastFrameTime = performance.now(); let spawnTimer = 0;
-        
-        let selectedControlMethod = 1; 
-        let isSmiling = false; let isMouthOpen = false; let isBlinking = false;
-        
-        // Perbaikan Status AI
-        let faceReady = false; let handsReady = false;
+        let handsReady = false;
 
         function resizeCanvas() { canvasElement.width = window.innerWidth; canvasElement.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas); resizeCanvas();
@@ -228,22 +201,17 @@
             else if (docElm.mozRequestFullScreen) docElm.mozRequestFullScreen();
             else if (docElm.webkitRequestFullScreen) docElm.webkitRequestFullScreen();
         }
-
         function exitFullscreenAndReload() {
             if (document.exitFullscreen) document.exitFullscreen();
             else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
             setTimeout(() => location.reload(), 300);
         }
 
+        // NAVIGATION
         document.getElementById('start-btn').addEventListener('click', () => {
             initAudio(); requestFullScreen();
-            startMenu.style.display = 'none'; controlSelectionMenu.style.display = 'flex'; 
+            startMenu.style.display = 'none'; modeSelectionMenu.style.display = 'flex'; // Langsung ke Mode
         });
-
-        function selectControl(method) {
-            initAudio(); selectedControlMethod = method;
-            controlSelectionMenu.style.display = 'none'; modeSelectionMenu.style.display = 'flex'; 
-        }
 
         function selectMode(mode) {
             initAudio(); currentMode = mode;
@@ -305,6 +273,7 @@
             return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
+        // SPAWNER
         function spawnBubble() {
             let isTargetObj = Math.random() < 0.35; let spawnedData;
             if (currentMode === 'huruf') {
@@ -327,30 +296,7 @@
             });
         }
 
-        // --- SISTEM MEDIA PIPE (DIOPTIMALKAN) ---
-        const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
-        faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: false, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-
-        faceMesh.onResults((results) => {
-            faceReady = true;
-            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-                const landmarks = results.multiFaceLandmarks[0];
-                const mouthWidth = Math.hypot(landmarks[61].x - landmarks[291].x, landmarks[61].y - landmarks[291].y);
-                const faceWidth = Math.hypot(landmarks[234].x - landmarks[454].x, landmarks[234].y - landmarks[454].y);
-                isSmiling = (mouthWidth / faceWidth) > 0.40;
-
-                const mouthOpenDist = Math.hypot(landmarks[13].x - landmarks[14].x, landmarks[13].y - landmarks[14].y);
-                const faceHeight = Math.hypot(landmarks[10].x - landmarks[152].x, landmarks[10].y - landmarks[152].y);
-                isMouthOpen = (mouthOpenDist / faceHeight) > 0.05;
-
-                const leftEyeV = Math.hypot(landmarks[159].x - landmarks[145].x, landmarks[159].y - landmarks[145].y);
-                const leftEyeH = Math.hypot(landmarks[33].x - landmarks[133].x, landmarks[33].y - landmarks[133].y);
-                const rightEyeV = Math.hypot(landmarks[386].x - landmarks[374].x, landmarks[386].y - landmarks[374].y);
-                const rightEyeH = Math.hypot(landmarks[362].x - landmarks[263].x, landmarks[362].y - landmarks[263].y);
-                isBlinking = ((leftEyeV / leftEyeH) < 0.18 || (rightEyeV / rightEyeH) < 0.18);
-            } else { isSmiling = false; isMouthOpen = false; isBlinking = false; }
-        });
-
+        // --- HANYA AI TANGAN (SUPER RINGAN) ---
         const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
         hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
 
@@ -367,14 +313,13 @@
                 let newFingerTips = [];
                 if (results.multiHandLandmarks) {
                     results.multiHandLandmarks.forEach((landmarks) => {
-                        const indexTip = landmarks[8]; const indexPIP = landmarks[6]; const middleTip = landmarks[12]; const middlePIP = landmarks[10];
+                        const indexTip = landmarks[8]; const indexPIP = landmarks[6]; 
+                        const middleTip = landmarks[12]; const middlePIP = landmarks[10];
+                        
+                        // Deteksi 2 Jari Diangkat (Untuk Pause)
                         let isVSign = (indexTip.y < indexPIP.y && middleTip.y < middlePIP.y);
-                        let fingerActive = false; let msg = "";
-
-                        if (selectedControlMethod === 1) { fingerActive = !isVSign; msg = fingerActive ? "AKTIF" : "NON-AKTIF (✌️)"; } 
-                        else if (selectedControlMethod === 2) { fingerActive = isSmiling; msg = fingerActive ? "AKTIF" : "SENYUM!"; } 
-                        else if (selectedControlMethod === 3) { fingerActive = isMouthOpen; msg = fingerActive ? "AKTIF" : "BUKA MULUT!"; } 
-                        else if (selectedControlMethod === 4) { fingerActive = isBlinking; msg = fingerActive ? "AKTIF" : "KEDIP!"; }
+                        let fingerActive = !isVSign;
+                        let msg = fingerActive ? "AKTIF" : "NON-AKTIF (✌️)";
 
                         newFingerTips.push({ x: (indexTip.x * drawWidth) + startX, y: (indexTip.y * drawHeight) + startY, active: fingerActive, message: msg });
                     });
@@ -382,27 +327,18 @@
                 indexFingerTips = newFingerTips;
             }
 
-            // Validasi mulai game (LOGIKA YANG DIPERBAIKI)
-            let isFaceNeeded = selectedControlMethod > 1; // Wajah hanya dibutuhkan di mode 2, 3, 4
-            let isReadyToStart = isFaceNeeded ? (faceReady && handsReady) : handsReady;
-
-            if (isReadyToStart && loadingText.style.display === 'block' && !isGameRunning) {
+            if (handsReady && loadingText.style.display === 'block' && !isGameRunning) {
                 startGamePlay();
             }
         });
 
-        // Kunci Anti-Freeze dengan Optimasi Performa
+        // CAMERA - Pemrosesan ringan
         let isProcessingCamera = false;
         const camera = new Camera(videoElement, { 
             onFrame: async () => { 
                 if (isProcessingCamera) return; 
                 isProcessingCamera = true;
                 try {
-                    // Hanya jalankan pemrosesan Wajah jika pengguna memilih kontrol yang butuh wajah
-                    if (selectedControlMethod > 1) {
-                        await faceMesh.send({image: videoElement});
-                    }
-                    // Selalu jalankan pemrosesan Tangan
                     await hands.send({image: videoElement});
                 } catch (error) {
                     console.error("AI Error:", error);
@@ -410,11 +346,10 @@
                     isProcessingCamera = false;
                 }
             }, 
-            // Turunkan resolusi AI ke 480p agar SANGAT RINGAN, visual game tetap mulus menutupi layar
-            width: 640, 
-            height: 480 
+            width: 640, height: 480 // Resolusi ringan
         });
 
+        // RENDER LOOP
         function renderLoop() {
             requestAnimationFrame(renderLoop);
             canvasCtx.save();
@@ -434,7 +369,7 @@
         }
         renderLoop();
 
-        // --- RENDER GAME UTAMA ---
+        // GAME LOGIC
         function updateAndDrawGame() {
             const now = performance.now(); const dt = (now - lastFrameTime) / 1000; lastFrameTime = now;
 
