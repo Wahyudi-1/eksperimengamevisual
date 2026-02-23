@@ -42,12 +42,13 @@
             <p class="text-gray-400 text-sm mb-6 uppercase tracking-widest font-semibold">Kamera Interaktif (Versi Ringan)</p>
             
             <div class="text-left text-gray-300 mb-6 space-y-2 text-sm bg-gray-800 p-4 rounded-xl">
-                <p>⏱️ Waktu Bermain: <span class="text-yellow-400 font-bold">3 Menit</span>.</p>
+                <p>⏱️ Waktu Bermain: <span class="text-yellow-400 font-bold">Pilihan (0.5 - 5 Menit)</span>.</p>
                 <p>🎯 Tangkap target yang benar untuk <span class="text-green-400 font-bold">+10 Poin</span>.</p>
                 <p>💥 Hati-hati objek pengecoh! Salah sentuh <span class="text-red-500 font-bold">-10 Poin</span>.</p>
                 <p>👆 <span class="text-blue-400 font-bold">Kontrol Jari:</span> Luruskan telunjuk untuk menangkap. Luruskan dua jari (✌️) untuk menjeda kursor.</p>
             </div>
 
+            <!-- Tombol Mulai (Memperbaiki tag penutup HTML sebelumnya yang rusak) -->
             <button id="start-btn" class="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-500 hover:to-green-500 text-white font-bold py-4 px-6 rounded-2xl shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all transform hover:scale-105 active:scale-95 text-xl mb-4">
                 Mulai (Layar Penuh)
             </button>
@@ -60,6 +61,22 @@
                     0813-3657-8058
                 </a>
             </div>
+        </div>
+
+        <!-- MENU PILIH WAKTU -->
+        <div id="time-selection" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-6 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-lg w-full mx-4 transition-all duration-500 flex-col">
+            <h2 class="text-2xl font-bold text-white mb-2">Pilih Waktu Bermain</h2>
+            <p class="text-gray-400 text-sm mb-6">Berapa lama Anda ingin bermain?</p>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+                <button onclick="selectTime(30)" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg">0.5 Menit</button>
+                <button onclick="selectTime(60)" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg">1 Menit</button>
+                <button onclick="selectTime(120)" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg">2 Menit</button>
+                <button onclick="selectTime(180)" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg">3 Menit</button>
+                <button onclick="selectTime(240)" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg">4 Menit</button>
+                <button onclick="selectTime(300)" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg">5 Menit</button>
+            </div>
+            <button onclick="backToStartMenu()" class="mt-2 text-gray-400 hover:text-white text-sm underline pb-2">Kembali ke Menu Utama</button>
         </div>
 
         <!-- MENU PILIH MODE -->
@@ -81,6 +98,7 @@
                     <span class="text-sm bg-black bg-opacity-30 px-3 py-1 rounded-full">Visual</span>
                 </button>
             </div>
+            <button onclick="backToTimeSelection()" class="mt-2 text-gray-400 hover:text-white text-sm underline pb-2">Kembali Pilih Waktu</button>
         </div>
 
         <!-- MENU PILIH TARGET -->
@@ -141,6 +159,7 @@
         const canvasCtx = canvasElement.getContext('2d');
         
         const startMenu = document.getElementById('start-menu');
+        const timeSelectionMenu = document.getElementById('time-selection');
         const modeSelectionMenu = document.getElementById('mode-selection');
         const targetSelectionMenu = document.getElementById('target-selection');
         const targetGrid = document.getElementById('target-grid');
@@ -189,7 +208,7 @@
             { id: 'Abu-abu', hex: '#6b7280' }, { id: 'Coklat', hex: '#78350f' }
         ];
 
-        let currentMode = ''; let isGameRunning = false; let score = 0; let targetData = null; let timeRemaining = 180; 
+        let currentMode = ''; let isGameRunning = false; let score = 0; let targetData = null; let timeRemaining = 180; let selectedTime = 180;
         let bubbles = []; let particles = []; let indexFingerTips = []; 
         let lastFrameTime = performance.now(); let spawnTimer = 0;
         let handsReady = false;
@@ -258,8 +277,17 @@
         // NAVIGATION
         document.getElementById('start-btn').addEventListener('click', () => {
             initAudio(); requestFullScreen();
-            startMenu.style.display = 'none'; modeSelectionMenu.style.display = 'flex';
+            startMenu.style.display = 'none'; timeSelectionMenu.style.display = 'flex';
         });
+
+        function selectTime(seconds) {
+            initAudio(); selectedTime = seconds;
+            timeSelectionMenu.style.display = 'none'; modeSelectionMenu.style.display = 'flex';
+        }
+
+        // Perbaikan animasi Menu saat kembali
+        function backToStartMenu() { timeSelectionMenu.style.display = 'none'; startMenu.style.display = 'block'; }
+        function backToTimeSelection() { modeSelectionMenu.style.display = 'none'; timeSelectionMenu.style.display = 'flex'; }
 
         function selectMode(mode) {
             initAudio(); currentMode = mode;
@@ -307,7 +335,7 @@
 
         function startGamePlay() {
             loadingText.style.display = 'none'; targetSelectionMenu.style.display = 'none'; hud.style.display = 'flex';
-            isGameRunning = true; score = 0; timeRemaining = 180; bubbles = [];
+            isGameRunning = true; score = 0; timeRemaining = selectedTime; bubbles = [];
             updateScoreDisplay(); lastFrameTime = performance.now();
         }
 
