@@ -84,21 +84,54 @@
             <h2 class="text-2xl font-bold text-white mb-2">Pilih Mode Permainan</h2>
             <p class="text-gray-400 text-sm mb-6">Apa yang ingin Anda tangkap hari ini?</p>
             
-            <div class="grid grid-cols-1 gap-4 mb-4">
-                <button onclick="selectMode('huruf')" class="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-400 hover:to-blue-500 text-white font-bold py-4 px-6 rounded-xl text-xl transition-transform hover:scale-105 shadow-lg flex items-center justify-between">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <button onclick="selectMode('huruf')" class="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-400 hover:to-blue-500 text-white font-bold py-4 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg flex flex-col items-center justify-center gap-2">
                     <span>🔤 Huruf A - Z</span>
-                    <span class="text-sm bg-black bg-opacity-30 px-3 py-1 rounded-full">Besar & Kecil</span>
+                    <span class="text-xs bg-black bg-opacity-30 px-3 py-1 rounded-full">Besar & Kecil</span>
                 </button>
-                <button onclick="selectMode('angka')" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-4 px-6 rounded-xl text-xl transition-transform hover:scale-105 shadow-lg flex items-center justify-between">
+                <button onclick="selectMode('angka')" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-4 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg flex flex-col items-center justify-center gap-2">
                     <span>🔢 Angka 0 - 30</span>
-                    <span class="text-sm bg-black bg-opacity-30 px-3 py-1 rounded-full">Matematika</span>
+                    <span class="text-xs bg-black bg-opacity-30 px-3 py-1 rounded-full">Dasar</span>
                 </button>
-                <button onclick="selectMode('warna')" class="bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-white font-bold py-4 px-6 rounded-xl text-xl transition-transform hover:scale-105 shadow-lg flex items-center justify-between">
+                <button onclick="selectMode('warna')" class="bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-white font-bold py-4 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg flex flex-col items-center justify-center gap-2">
                     <span>🎨 Aneka Warna</span>
-                    <span class="text-sm bg-black bg-opacity-30 px-3 py-1 rounded-full">Visual</span>
+                    <span class="text-xs bg-black bg-opacity-30 px-3 py-1 rounded-full">Visual</span>
+                </button>
+                <button onclick="openMathMenu()" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold py-4 px-4 rounded-xl text-lg transition-transform hover:scale-105 shadow-lg flex flex-col items-center justify-center gap-2">
+                    <span>🧮 Matematika</span>
+                    <span class="text-xs bg-black bg-opacity-30 px-3 py-1 rounded-full">Operasi Hitung</span>
                 </button>
             </div>
             <button onclick="backToTimeSelection()" class="mt-2 text-gray-400 hover:text-white text-sm underline pb-2">Kembali Pilih Waktu</button>
+        </div>
+
+        <!-- MENU PILIH MATEMATIKA -->
+        <div id="math-selection" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-6 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-lg w-full mx-4 transition-all duration-500 flex-col">
+            <h2 class="text-2xl font-bold text-white mb-2">Pilih Operasi Hitung</h2>
+            <p class="text-gray-400 text-sm mb-6">Pecahkan soal untuk menangkap target!</p>
+            
+            <div id="math-grid" class="grid grid-cols-2 gap-3 mb-4">
+                <button onclick="selectMathMode('math_add_1')" class="bg-gray-800 border border-gray-600 hover:bg-blue-600 hover:border-blue-400 text-white font-bold py-3 px-2 rounded-xl transition-all shadow-sm transform hover:scale-105 active:scale-95 flex flex-col items-center text-sm">
+                    <span class="text-xl mb-1">➕</span> Penjumlahan 1 Digit
+                </button>
+                <button onclick="selectMathMode('math_add_2')" class="bg-gray-800 border border-gray-600 hover:bg-blue-600 hover:border-blue-400 text-white font-bold py-3 px-2 rounded-xl transition-all shadow-sm transform hover:scale-105 active:scale-95 flex flex-col items-center text-sm">
+                    <span class="text-xl mb-1">➕</span> Penjumlahan 2 Digit
+                </button>
+                <button onclick="selectMathMode('math_sub_1')" class="bg-gray-800 border border-gray-600 hover:bg-red-600 hover:border-red-400 text-white font-bold py-3 px-2 rounded-xl transition-all shadow-sm transform hover:scale-105 active:scale-95 flex flex-col items-center text-sm">
+                    <span class="text-xl mb-1">➖</span> Pengurangan 1 Digit
+                </button>
+                <button onclick="selectMathMode('math_sub_2')" class="bg-gray-800 border border-gray-600 hover:bg-red-600 hover:border-red-400 text-white font-bold py-3 px-2 rounded-xl transition-all shadow-sm transform hover:scale-105 active:scale-95 flex flex-col items-center text-sm">
+                    <span class="text-xl mb-1">➖</span> Pengurangan 2 Digit
+                </button>
+                <button onclick="selectMathMode('math_mul_1')" class="bg-gray-800 border border-gray-600 hover:bg-purple-600 hover:border-purple-400 text-white font-bold py-3 px-2 rounded-xl transition-all shadow-sm transform hover:scale-105 active:scale-95 flex flex-col items-center text-sm">
+                    <span class="text-xl mb-1">✖️</span> Perkalian 1 Digit
+                </button>
+                <button onclick="selectMathMode('math_div')" class="bg-gray-800 border border-gray-600 hover:bg-green-600 hover:border-green-400 text-white font-bold py-3 px-2 rounded-xl transition-all shadow-sm transform hover:scale-105 active:scale-95 flex flex-col items-center text-sm">
+                    <span class="text-xl mb-1">➗</span> Pembagian Bulat
+                </button>
+            </div>
+            <button onclick="backToModeSelectionFromMath()" id="math-back-btn" class="mt-2 text-gray-400 hover:text-white text-sm underline pb-2">Kembali Pilih Mode</button>
+            <p id="math-loading-text" class="text-yellow-400 mt-2 text-sm hidden font-semibold animate-pulse">Menghidupkan Kamera & AI (Mohon tunggu)...</p>
         </div>
 
         <!-- MENU PILIH TARGET -->
@@ -161,9 +194,11 @@
         const startMenu = document.getElementById('start-menu');
         const timeSelectionMenu = document.getElementById('time-selection');
         const modeSelectionMenu = document.getElementById('mode-selection');
+        const mathSelectionMenu = document.getElementById('math-selection');
         const targetSelectionMenu = document.getElementById('target-selection');
         const targetGrid = document.getElementById('target-grid');
         const loadingText = document.getElementById('loading-text');
+        const mathLoadingText = document.getElementById('math-loading-text');
         
         const hud = document.getElementById('hud');
         const scoreDisplay = document.getElementById('score-display');
@@ -211,7 +246,7 @@
         let currentMode = ''; let isGameRunning = false; let score = 0; let targetData = null; let timeRemaining = 180; let selectedTime = 180;
         let bubbles = []; let particles = []; let indexFingerTips = []; 
         let lastFrameTime = performance.now(); let spawnTimer = 0;
-        let handsReady = false;
+        let handsReady = false; let isWaitingForCamera = false;
 
         // FUNGSI PERBAIKAN: Menampilkan Skor HUD
         function updateScoreDisplay() {
@@ -289,6 +324,14 @@
         function backToStartMenu() { timeSelectionMenu.style.display = 'none'; startMenu.style.display = 'block'; }
         function backToTimeSelection() { modeSelectionMenu.style.display = 'none'; timeSelectionMenu.style.display = 'flex'; }
 
+        function openMathMenu() {
+            initAudio();
+            modeSelectionMenu.style.display = 'none'; mathSelectionMenu.style.display = 'flex';
+        }
+        function backToModeSelectionFromMath() {
+            mathSelectionMenu.style.display = 'none'; modeSelectionMenu.style.display = 'flex';
+        }
+
         function selectMode(mode) {
             initAudio(); currentMode = mode;
             modeSelectionMenu.style.display = 'none'; targetSelectionMenu.style.display = 'flex';
@@ -329,12 +372,67 @@
             document.querySelector('#target-selection h2').innerText = "Mempersiapkan AI...";
             document.querySelector('#target-selection p').style.display = 'none';
             loadingText.style.display = 'block';
+            isWaitingForCamera = true;
 
             camera.start().catch(err => { alert("Gagal mengakses kamera. Pastikan memberikan izin!"); location.reload(); });
         }
 
+        function selectMathMode(mode) {
+            initAudio(); currentMode = mode;
+            document.getElementById('math-grid').style.display = 'none';
+            document.getElementById('math-back-btn').style.display = 'none';
+            document.querySelector('#math-selection h2').innerText = "Mempersiapkan AI...";
+            document.querySelector('#math-selection p').style.display = 'none';
+            mathLoadingText.style.display = 'block';
+            isWaitingForCamera = true;
+
+            camera.start().catch(err => { alert("Gagal mengakses kamera. Pastikan memberikan izin!"); location.reload(); });
+        }
+
+        function generateMathQuestion() {
+            let a, b, ans, op;
+            switch(currentMode) {
+                case 'math_add_1':
+                    a = Math.floor(Math.random() * 9) + 1; b = Math.floor(Math.random() * 9) + 1;
+                    ans = a + b; op = '+'; break;
+                case 'math_add_2':
+                    a = Math.floor(Math.random() * 90) + 10; b = Math.floor(Math.random() * 90) + 10;
+                    ans = a + b; op = '+'; break;
+                case 'math_sub_1':
+                    a = Math.floor(Math.random() * 9) + 1; b = Math.floor(Math.random() * a) + 1; 
+                    if (b > a) b = a; // Mencegah hasil negatif
+                    ans = a - b; op = '-'; break;
+                case 'math_sub_2':
+                    a = Math.floor(Math.random() * 90) + 10; b = Math.floor(Math.random() * 90) + 10;
+                    if (b > a) { let temp = a; a = b; b = temp; } // Memastikan selalu bilangan positif/bulat
+                    ans = a - b; op = '-'; break;
+                case 'math_mul_1':
+                    a = Math.floor(Math.random() * 9) + 1; b = Math.floor(Math.random() * 9) + 1;
+                    ans = a * b; op = 'x'; break;
+                case 'math_div':
+                    b = Math.floor(Math.random() * 9) + 1; // Pembagi (1-9)
+                    ans = Math.floor(Math.random() * 10) + 1; // Jawaban (1-10)
+                    a = b * ans; // Angka yang dibagi (Otomatis menghasilkan 1 atau 2 digit)
+                    op = ':'; break;
+            }
+            targetData = { text: `${a} ${op} ${b}`, answer: ans.toString() };
+            targetDisplay.innerHTML = `<span class="text-2xl">${targetData.text}</span>`;
+            
+            // Mengubah jawaban target pada gelembung yang sudah melayang
+            bubbles.forEach(b => { b.isTarget = (b.data === targetData.answer); });
+        }
+
         function startGamePlay() {
-            loadingText.style.display = 'none'; targetSelectionMenu.style.display = 'none'; hud.style.display = 'flex';
+            loadingText.style.display = 'none'; 
+            mathLoadingText.style.display = 'none';
+            targetSelectionMenu.style.display = 'none'; 
+            mathSelectionMenu.style.display = 'none';
+            hud.style.display = 'flex';
+            
+            if (currentMode.startsWith('math_')) {
+                generateMathQuestion();
+            }
+
             isGameRunning = true; score = 0; timeRemaining = selectedTime; bubbles = [];
             updateScoreDisplay(); lastFrameTime = performance.now();
         }
@@ -364,6 +462,18 @@
             else if (currentMode === 'warna') {
                 if (isTargetObj) { spawnedData = targetData; } 
                 else { do { spawnedData = COLORS[Math.floor(Math.random() * COLORS.length)]; } while (spawnedData.id === targetData.id); }
+            }
+            else if (currentMode.startsWith('math_')) {
+                if (isTargetObj) { 
+                    spawnedData = targetData.answer; 
+                } 
+                else { 
+                    let offset;
+                    do { offset = Math.floor(Math.random() * 11) - 5; } while (offset === 0);
+                    let wrongAns = parseInt(targetData.answer) + offset;
+                    if (wrongAns < 0 && !currentMode.includes('sub')) wrongAns = Math.abs(wrongAns);
+                    spawnedData = wrongAns.toString(); 
+                }
             }
             const radius = currentMode === 'warna' ? Math.random() * 10 + 35 : Math.random() * 15 + 35; 
             bubbles.push({
@@ -443,7 +553,8 @@
             }
 
             // Memulai game setelah AI siap membaca setidaknya 1 frame
-            if (handsReady && loadingText.style.display === 'block' && !isGameRunning) {
+            if (handsReady && isWaitingForCamera && !isGameRunning) {
+                isWaitingForCamera = false;
                 startGamePlay();
             }
         });
@@ -516,6 +627,9 @@
                     if (b.isTarget) {
                         playCorrectSound(); score += 10; showFloatingText(b.x, b.y, "+10", true);
                         createParticles(b.x, b.y, currentMode === 'warna' ? b.data.hex : '#4ade80');
+                        if (currentMode.startsWith('math_')) {
+                            generateMathQuestion();
+                        }
                     } else {
                         playWrongSound(); score -= 10; showFloatingText(b.x, b.y, "-10", false);
                         createParticles(b.x, b.y, '#ef4444'); 
