@@ -10,11 +10,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <!-- Script Face Mesh DIHAPUS untuk performa super ringan -->
 
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
-        #webcam { display: none; }
+        
+        /* PERBAIKAN BUG KAMERA: Tidak boleh di-display: none agar browser HP tidak membekukan video */
+        #webcam { position: absolute; opacity: 0.01; width: 10px; height: 10px; z-index: -10; pointer-events: none; }
+        
         #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transform: scaleX(-1); object-fit: cover; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         .pointer-events-auto { pointer-events: auto; }
@@ -296,32 +298,60 @@
             });
         }
 
-        // --- HANYA AI TANGAN (SUPER RINGAN) ---
+        // --- HANYA AI TANGAN DENGAN LOGIKA ANTI-ROTASI ---
         const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
         hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
 
         hands.onResults((results) => {
             handsReady = true;
-            if (results.image) {
-                const videoRatio = results.image.width / results.image.height;
+            if (results.image && videoElement.videoWidth > 0) {
+                const vW = videoElement.videoWidth;
+                const vH = videoElement.videoHeight;
                 const canvasRatio = canvasElement.width / canvasElement.height;
+                const videoRatio = vW / vH;
                 let drawWidth, drawHeight, startX, startY;
 
-                if (canvasRatio > videoRatio) { drawWidth = canvasElement.width; drawHeight = canvasElement.width / videoRatio; startX = 0; startY = (canvasElement.height - drawHeight) / 2; } 
-                else { drawHeight = canvasElement.height; drawWidth = canvasElement.height * videoRatio; startX = (canvasElement.width - drawWidth) / 2; startY = 0; }
+                if (canvasRatio > videoRatio) { 
+                    drawWidth = canvasElement.width; drawHeight = canvasElement.width / videoRatio; startX = 0; startY = (canvasElement.height - drawHeight) / 2; 
+                } else { 
+                    drawHeight = canvasElement.height; drawWidth = canvasElement.height * videoRatio; startX = (canvasElement.width - drawWidth) / 2; startY = 0; 
+                }
                 
                 let newFingerTips = [];
                 if (results.multiHandLandmarks) {
                     results.multiHandLandmarks.forEach((landmarks) => {
-                        const indexTip = landmarks[8]; const indexPIP = landmarks[6]; 
-                        const middleTip = landmarks[12]; const middlePIP = landmarks[10];
+                        const wrist = landmarks[0];
                         
-                        // Deteksi 2 Jari Diangkat (Untuk Pause)
-                        let isVSign = (indexTip.y < indexPIP.y && middleTip.y < middlePIP.y);
+                        // Jari Telunjuk
+                        const indexTip = landmarks[8];
+                        const indexMCP = landmarks[5]; // Buku Jari
+                        
+                        // Jari Tengah
+                        const middleTip = landmarks[12];
+                        const middleMCP = landmarks[9]; // Buku Jari
+                        
+                        // PERBAIKAN BUG: Hitung apakah jari terentang (berdasarkan jarak ke pergelangan tangan)
+                        // Logika ini kebal terhadap rotasi/miringnya tangan!
+                        const distIndexTip = Math.hypot(indexTip.x - wrist.x, indexTip.y - wrist.y);
+                        const distIndexMCP = Math.hypot(indexMCP.x - wrist.x, indexMCP.y - wrist.y);
+                        const isIndexExtended = distIndexTip > distIndexMCP;
+
+                        const distMiddleTip = Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y);
+                        const distMiddleMCP = Math.hypot(middleMCP.x - wrist.x, middleMCP.y - wrist.y);
+                        const isMiddleExtended = distMiddleTip > distMiddleMCP;
+                        
+                        // Jika Jari Tengah terentang, asumsikan bentuk V (Pause)
+                        let isVSign = isIndexExtended && isMiddleExtended;
                         let fingerActive = !isVSign;
                         let msg = fingerActive ? "AKTIF" : "NON-AKTIF (✌️)";
 
-                        newFingerTips.push({ x: (indexTip.x * drawWidth) + startX, y: (indexTip.y * drawHeight) + startY, active: fingerActive, message: msg });
+                        // Pastikan pointer menggunakan koordinat Ujung Jari Telunjuk secara presisi
+                        newFingerTips.push({ 
+                            x: (indexTip.x * drawWidth) + startX, 
+                            y: (indexTip.y * drawHeight) + startY, 
+                            active: fingerActive, 
+                            message: msg 
+                        });
                     });
                 }
                 indexFingerTips = newFingerTips;
@@ -332,11 +362,12 @@
             }
         });
 
-        // CAMERA - Pemrosesan ringan
+        // CAMERA - Pemrosesan ringan & stabil
         let isProcessingCamera = false;
         const camera = new Camera(videoElement, { 
             onFrame: async () => { 
-                if (isProcessingCamera) return; 
+                // Cegah deadlock jika video belum ter-render sempurna
+                if (isProcessingCamera || videoElement.readyState < 2 || videoElement.videoWidth === 0) return; 
                 isProcessingCamera = true;
                 try {
                     await hands.send({image: videoElement});
@@ -349,14 +380,16 @@
             width: 640, height: 480 // Resolusi ringan
         });
 
-        // RENDER LOOP
+        // RENDER LOOP TERPISAH
         function renderLoop() {
             requestAnimationFrame(renderLoop);
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-            if (videoElement.readyState >= 2) {
-                const videoRatio = videoElement.videoWidth / videoElement.videoHeight;
+            if (videoElement.readyState >= 2 && videoElement.videoWidth > 0) {
+                const vW = videoElement.videoWidth;
+                const vH = videoElement.videoHeight;
+                const videoRatio = vW / vH;
                 const canvasRatio = canvasElement.width / canvasElement.height;
                 let drawWidth, drawHeight, startX, startY;
                 if (canvasRatio > videoRatio) { drawWidth = canvasElement.width; drawHeight = canvasElement.width / videoRatio; startX = 0; startY = (canvasElement.height - drawHeight) / 2; } 
