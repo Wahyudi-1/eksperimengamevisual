@@ -12,10 +12,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #111; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
         
-        /* PERBAIKAN BUG KAMERA: Tidak boleh di-display: none agar browser HP tidak membekukan video */
-        #webcam { position: absolute; opacity: 0.01; width: 10px; height: 10px; z-index: -10; pointer-events: none; }
+        /* PERBAIKAN BUG KAMERA: Video dilempar jauh dari layar tetapi ukurannya dipertahankan agar browser tidak membekukannya (Throttling) */
+        #webcam { position: absolute; left: -10000px; top: -10000px; width: 640px; height: 480px; pointer-events: none; }
         
         #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transform: scaleX(-1); object-fit: cover; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
@@ -45,7 +45,7 @@
                 <p>⏱️ Waktu Bermain: <span class="text-yellow-400 font-bold">3 Menit</span>.</p>
                 <p>🎯 Tangkap target yang benar untuk <span class="text-green-400 font-bold">+10 Poin</span>.</p>
                 <p>💥 Hati-hati objek pengecoh! Salah sentuh <span class="text-red-500 font-bold">-10 Poin</span>.</p>
-                <p>👆 <span class="text-blue-400 font-bold">Kontrol Jari:</span> Tunjuk untuk menangkap, dan angkat 2 jari lurus (✌️) untuk menonaktifkan kursor.</p>
+                <p>👆 <span class="text-blue-400 font-bold">Kontrol Jari:</span> Luruskan telunjuk untuk menangkap. Luruskan dua jari (✌️) untuk menjeda kursor.</p>
             </div>
 
             <button id="start-btn" class="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-500 hover:to-green-500 text-white font-bold py-4 px-6 rounded-2xl shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all transform hover:scale-105 active:scale-95 text-xl mb-4">
@@ -194,6 +194,52 @@
         let lastFrameTime = performance.now(); let spawnTimer = 0;
         let handsReady = false;
 
+        // FUNGSI PERBAIKAN: Menampilkan Skor HUD
+        function updateScoreDisplay() {
+            scoreDisplay.innerText = score;
+            if (score < 0) {
+                scoreDisplay.classList.add('text-red-500');
+                scoreDisplay.classList.remove('text-white');
+            } else {
+                scoreDisplay.classList.add('text-white');
+                scoreDisplay.classList.remove('text-red-500');
+            }
+        }
+
+        // FUNGSI PERBAIKAN: Efek Partikel saat Menyentuh Objek
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: x, 
+                    y: y, 
+                    vx: (Math.random() - 0.5) * 12, 
+                    vy: (Math.random() - 0.5) * 12, 
+                    life: 1.0, 
+                    color: color
+                });
+            }
+        }
+
+        // FUNGSI PERBAIKAN: Teks Melayang "+10" / "-10"
+        function showFloatingText(x, y, text, isPositive) {
+            const el = document.createElement('div');
+            el.className = 'score-pop';
+            el.innerText = text;
+            el.style.color = isPositive ? '#4ade80' : '#ef4444';
+            
+            // Perhitungan kompensasi khusus karena canvas HTML terbalik efek cermin (scaleX(-1))
+            const visualX = window.innerWidth - x;
+            
+            el.style.left = `${visualX - 25}px`;
+            el.style.top = `${y - 20}px`;
+            document.getElementById('ui-layer').appendChild(el);
+            
+            // Hapus elemen saat animasi selesai
+            setTimeout(() => {
+                if(el.parentNode) el.parentNode.removeChild(el);
+            }, 1000);
+        }
+
         function resizeCanvas() { canvasElement.width = window.innerWidth; canvasElement.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
@@ -212,7 +258,7 @@
         // NAVIGATION
         document.getElementById('start-btn').addEventListener('click', () => {
             initAudio(); requestFullScreen();
-            startMenu.style.display = 'none'; modeSelectionMenu.style.display = 'flex'; // Langsung ke Mode
+            startMenu.style.display = 'none'; modeSelectionMenu.style.display = 'flex';
         });
 
         function selectMode(mode) {
@@ -275,7 +321,7 @@
             return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // SPAWNER
+        // SPAWNER GELEMBUNG
         function spawnBubble() {
             let isTargetObj = Math.random() < 0.35; let spawnedData;
             if (currentMode === 'huruf') {
@@ -298,19 +344,22 @@
             });
         }
 
-        // --- HANYA AI TANGAN DENGAN LOGIKA ANTI-ROTASI ---
+        // --- SISTEM PELACAKAN JARI TANGAN (HANDS AI) ---
         const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
         hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
 
         hands.onResults((results) => {
             handsReady = true;
-            if (results.image && videoElement.videoWidth > 0) {
-                const vW = videoElement.videoWidth;
-                const vH = videoElement.videoHeight;
+            
+            // Pastikan gambar video ada dan berukuran valid
+            if (results.image && results.image.width > 0) {
+                const vW = results.image.width;
+                const vH = results.image.height;
                 const canvasRatio = canvasElement.width / canvasElement.height;
                 const videoRatio = vW / vH;
                 let drawWidth, drawHeight, startX, startY;
 
+                // Matematika pemetaan presisi tinggi (cover object-fit)
                 if (canvasRatio > videoRatio) { 
                     drawWidth = canvasElement.width; drawHeight = canvasElement.width / videoRatio; startX = 0; startY = (canvasElement.height - drawHeight) / 2; 
                 } else { 
@@ -318,34 +367,42 @@
                 }
                 
                 let newFingerTips = [];
-                if (results.multiHandLandmarks) {
+                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                     results.multiHandLandmarks.forEach((landmarks) => {
-                        const wrist = landmarks[0];
-                        
-                        // Jari Telunjuk
-                        const indexTip = landmarks[8];
-                        const indexMCP = landmarks[5]; // Buku Jari
-                        
-                        // Jari Tengah
-                        const middleTip = landmarks[12];
-                        const middleMCP = landmarks[9]; // Buku Jari
-                        
-                        // PERBAIKAN BUG: Hitung apakah jari terentang (berdasarkan jarak ke pergelangan tangan)
-                        // Logika ini kebal terhadap rotasi/miringnya tangan!
-                        const distIndexTip = Math.hypot(indexTip.x - wrist.x, indexTip.y - wrist.y);
-                        const distIndexMCP = Math.hypot(indexMCP.x - wrist.x, indexMCP.y - wrist.y);
-                        const isIndexExtended = distIndexTip > distIndexMCP;
+                        // Titik Acuan MediaPipe
+                        const wrist = landmarks[0];           // Pergelangan Tangan
+                        const indexMCP = landmarks[5];         // Pangkal Telunjuk (Knuckle)
+                        const indexTip = landmarks[8];         // Ujung Telunjuk
+                        const middleMCP = landmarks[9];        // Pangkal Jari Tengah
+                        const middleTip = landmarks[12];       // Ujung Jari Tengah
+                        const ringMCP = landmarks[13];         // Pangkal Jari Manis
+                        const ringTip = landmarks[16];         // Ujung Jari Manis
 
-                        const distMiddleTip = Math.hypot(middleTip.x - wrist.x, middleTip.y - wrist.y);
-                        const distMiddleMCP = Math.hypot(middleMCP.x - wrist.x, middleMCP.y - wrist.y);
-                        const isMiddleExtended = distMiddleTip > distMiddleMCP;
+                        // PERBAIKAN LOGIKA AI: 
+                        // Mengukur dari ujung jari ke pangkal (MCP) alih-alih sendi tengah (PIP) agar 
+                        // deteksi lurus atau ditekuk jauh lebih sensitif dan akurat di segala sudut.
+                        const getDist = (p1, p2) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
                         
-                        // Jika Jari Tengah terentang, asumsikan bentuk V (Pause)
-                        let isVSign = isIndexExtended && isMiddleExtended;
-                        let fingerActive = !isVSign;
-                        let msg = fingerActive ? "AKTIF" : "NON-AKTIF (✌️)";
+                        const isIndexExtended = getDist(indexTip, wrist) > getDist(indexMCP, wrist) * 1.25;
+                        const isMiddleExtended = getDist(middleTip, wrist) > getDist(middleMCP, wrist) * 1.25;
+                        const isRingExtended = getDist(ringTip, wrist) > getDist(ringMCP, wrist) * 1.25;
 
-                        // Pastikan pointer menggunakan koordinat Ujung Jari Telunjuk secara presisi
+                        // V-Sign (Pause): Telunjuk Lurus, Tengah Lurus, Manis Ditekuk
+                        let isVSign = isIndexExtended && isMiddleExtended && !isRingExtended;
+
+                        // Tentukan Status dan Pesan Kursor
+                        let fingerActive = false;
+                        let msg = "JARI DITEKUK";
+
+                        if (isVSign) {
+                            fingerActive = false;
+                            msg = "JEDA (✌️)";
+                        } else if (isIndexExtended) {
+                            fingerActive = true;
+                            msg = "AKTIF";
+                        }
+
+                        // Daftarkan koordinat kursor ke dalam game
                         newFingerTips.push({ 
                             x: (indexTip.x * drawWidth) + startX, 
                             y: (indexTip.y * drawHeight) + startY, 
@@ -357,6 +414,7 @@
                 indexFingerTips = newFingerTips;
             }
 
+            // Memulai game setelah AI siap membaca setidaknya 1 frame
             if (handsReady && loadingText.style.display === 'block' && !isGameRunning) {
                 startGamePlay();
             }
@@ -366,8 +424,7 @@
         let isProcessingCamera = false;
         const camera = new Camera(videoElement, { 
             onFrame: async () => { 
-                // Cegah deadlock jika video belum ter-render sempurna
-                if (isProcessingCamera || videoElement.readyState < 2 || videoElement.videoWidth === 0) return; 
+                if (isProcessingCamera) return; 
                 isProcessingCamera = true;
                 try {
                     await hands.send({image: videoElement});
@@ -377,10 +434,10 @@
                     isProcessingCamera = false;
                 }
             }, 
-            width: 640, height: 480 // Resolusi ringan
+            width: 640, height: 480 
         });
 
-        // RENDER LOOP TERPISAH
+        // RENDER LOOP TERPISAH DARI AI (Agar Grafis Mulus 60FPS)
         function renderLoop() {
             requestAnimationFrame(renderLoop);
             canvasCtx.save();
@@ -419,9 +476,12 @@
                 b.y += b.speedY * (dt * 60); b.x += b.speedX * (dt * 60); b.rotation += b.rotSpeed * (dt * 60);
                 if (b.x < b.radius || b.x > canvasElement.width - b.radius) b.speedX *= -1;
 
+                // Cek tabrakan gelembung dengan ujung jari yang AKTIF
                 let isTouched = false;
                 for (let pointer of indexFingerTips) {
-                    if (Math.hypot(pointer.x - b.x, pointer.y - b.y) < b.radius + 15) { if (pointer.active) { isTouched = true; break; } }
+                    if (Math.hypot(pointer.x - b.x, pointer.y - b.y) < b.radius + 15) { 
+                        if (pointer.active) { isTouched = true; break; } 
+                    }
                 }
 
                 if (isTouched) {
@@ -460,19 +520,21 @@
             }
             canvasCtx.globalAlpha = 1.0;
 
+            // RENDER JARI & KURSOR VISUAL
             for (let pointer of indexFingerTips) {
                 canvasCtx.beginPath(); canvasCtx.arc(pointer.x, pointer.y, 18, 0, Math.PI * 2);
                 if (pointer.active) {
                     canvasCtx.fillStyle = 'rgba(56, 189, 248, 0.8)'; canvasCtx.fill(); canvasCtx.lineWidth = 4;
                     canvasCtx.strokeStyle = '#ffffff'; canvasCtx.shadowColor = '#38bdf8'; canvasCtx.shadowBlur = 15; canvasCtx.stroke();
                 } else {
-                    canvasCtx.fillStyle = 'rgba(156, 163, 175, 0.3)'; canvasCtx.fill(); canvasCtx.lineWidth = 2;
+                    canvasCtx.fillStyle = 'rgba(156, 163, 175, 0.4)'; canvasCtx.fill(); canvasCtx.lineWidth = 2;
                     canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; canvasCtx.stroke();
                 }
                 canvasCtx.shadowBlur = 0; 
                 canvasCtx.beginPath(); canvasCtx.arc(pointer.x, pointer.y, 4, 0, Math.PI * 2);
                 canvasCtx.fillStyle = pointer.active ? '#ffffff' : 'rgba(255,255,255,0.5)'; canvasCtx.fill();
 
+                // Teks Penanda Jari
                 canvasCtx.save(); canvasCtx.translate(pointer.x, pointer.y - 35); canvasCtx.scale(-1, 1); 
                 canvasCtx.fillStyle = pointer.active ? '#4ade80' : '#f87171'; canvasCtx.font = "bold 14px 'Segoe UI', Arial"; canvasCtx.textAlign = "center";
                 canvasCtx.shadowColor = 'rgba(0,0,0,1)'; canvasCtx.shadowBlur = 6; canvasCtx.fillText(pointer.message, 0, 0);
