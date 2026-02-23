@@ -247,6 +247,7 @@
         let bubbles = []; let particles = []; let indexFingerTips = []; 
         let lastFrameTime = performance.now(); let spawnTimer = 0;
         let handsReady = false; let isWaitingForCamera = false;
+        let framesWithoutHand = 0; // Tambahan: Mencegah kursor hilang/berkedip saat bergerak cepat
 
         // FUNGSI PERBAIKAN: Menampilkan Skor HUD
         function updateScoreDisplay() {
@@ -506,38 +507,42 @@
                 
                 let newFingerTips = [];
                 if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                    framesWithoutHand = 0; // Reset counter karena tangan terdeteksi
                     results.multiHandLandmarks.forEach((landmarks) => {
                         // Titik Acuan MediaPipe
-                        const wrist = landmarks[0];           // Pergelangan Tangan
+                        const wrist = landmarks[0];            // Pergelangan Tangan
                         const indexMCP = landmarks[5];         // Pangkal Telunjuk (Knuckle)
+                        const indexPIP = landmarks[6];         // Sendi Tengah Telunjuk
                         const indexTip = landmarks[8];         // Ujung Telunjuk
                         const middleMCP = landmarks[9];        // Pangkal Jari Tengah
+                        const middlePIP = landmarks[10];       // Sendi Tengah Jari Tengah
                         const middleTip = landmarks[12];       // Ujung Jari Tengah
                         const ringMCP = landmarks[13];         // Pangkal Jari Manis
+                        const ringPIP = landmarks[14];         // Sendi Tengah Jari Manis
                         const ringTip = landmarks[16];         // Ujung Jari Manis
 
                         // PERBAIKAN LOGIKA AI: 
-                        // Mengukur dari ujung jari ke pangkal (MCP) alih-alih sendi tengah (PIP) agar 
-                        // deteksi lurus atau ditekuk jauh lebih sensitif dan akurat di segala sudut.
+                        // Menggunakan perbandingan jarak Tip-Wrist vs PIP-Wrist. 
+                        // Ini adalah metode paling stabil di sudut kamera mana pun agar sensor selalu aktif.
                         const getDist = (p1, p2) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
                         
-                        const isIndexExtended = getDist(indexTip, wrist) > getDist(indexMCP, wrist) * 1.25;
-                        const isMiddleExtended = getDist(middleTip, wrist) > getDist(middleMCP, wrist) * 1.25;
-                        const isRingExtended = getDist(ringTip, wrist) > getDist(ringMCP, wrist) * 1.25;
+                        const isIndexExtended = getDist(indexTip, wrist) > getDist(indexPIP, wrist);
+                        const isMiddleExtended = getDist(middleTip, wrist) > getDist(middlePIP, wrist);
+                        const isRingExtended = getDist(ringTip, wrist) > getDist(ringPIP, wrist);
 
                         // V-Sign (Pause): Telunjuk Lurus, Tengah Lurus, Manis Ditekuk
                         let isVSign = isIndexExtended && isMiddleExtended && !isRingExtended;
 
                         // Tentukan Status dan Pesan Kursor
-                        let fingerActive = false;
-                        let msg = "JARI DITEKUK";
+                        let fingerActive = true; // Kursor secara bawaan akan AKTIF kecuali benar-benar ditekuk
+                        let msg = "AKTIF";
 
                         if (isVSign) {
                             fingerActive = false;
                             msg = "JEDA (✌️)";
-                        } else if (isIndexExtended) {
-                            fingerActive = true;
-                            msg = "AKTIF";
+                        } else if (!isIndexExtended) {
+                            fingerActive = false;
+                            msg = "JARI DITEKUK";
                         }
 
                         // Daftarkan koordinat kursor ke dalam game
@@ -548,8 +553,14 @@
                             message: msg 
                         });
                     });
+                    indexFingerTips = newFingerTips;
+                } else {
+                    // Jika AI gagal membaca frame akibat gerakan cepat, pertahankan kursor selama 5 frame
+                    framesWithoutHand++;
+                    if (framesWithoutHand > 5) {
+                        indexFingerTips = [];
+                    }
                 }
-                indexFingerTips = newFingerTips;
             }
 
             // Memulai game setelah AI siap membaca setidaknya 1 frame
