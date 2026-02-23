@@ -5,54 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Game Kamera: Tangkap Objek</title>
     
-    <!-- Tailwind CSS untuk styling UI -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google MediaPipe untuk Pelacakan Tangan -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    
-    <!-- TAMBAHAN: Google MediaPipe untuk Pelacakan Wajah (Senyum, Mulut, Kedip) -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
-        
         #webcam { display: none; }
-        
-        #game-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            transform: scaleX(-1); /* Efek cermin untuk seluruh kanvas */
-            object-fit: cover;
-        }
-
+        #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transform: scaleX(-1); object-fit: cover; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         .pointer-events-auto { pointer-events: auto; }
         
-        .score-pop {
-            position: absolute;
-            font-weight: bold;
-            font-size: 2.5rem;
-            animation: floatUp 1s ease-out forwards;
-            pointer-events: none;
-            z-index: 20;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-        }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
-        }
+        .score-pop { position: absolute; font-weight: bold; font-size: 2.5rem; animation: floatUp 1s ease-out forwards; pointer-events: none; z-index: 20; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-50px) scale(1.5); } }
         
         .no-select { user-select: none; -webkit-user-select: none; }
-
-        /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
@@ -60,10 +30,8 @@
 </head>
 <body>
 
-    <!-- UI Layer -->
     <div id="ui-layer" class="flex flex-col justify-center items-center no-select">
         
-        <!-- Menu Mulai -->
         <div id="start-menu" class="pointer-events-auto bg-gray-900 bg-opacity-90 p-8 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-md w-full mx-4 transition-all duration-500">
             <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
                 TANGKAP OBJEK
@@ -82,28 +50,23 @@
                 Mulai (Layar Penuh)
             </button>
 
-            <!-- Keterangan Pembuat & Kontak WhatsApp -->
             <div class="mt-4 pt-4 border-t border-gray-700 text-sm text-gray-400">
                 <p>Dibuat oleh <span class="font-bold text-gray-200">Wahyudi</span> dengan menggunakan <span class="font-bold text-gray-200">Gemini AI</span></p>
                 <p class="mt-2 mb-3 text-xs">Jika ada saran, silakan kirim pesan melalui WhatsApp:</p>
                 <a href="https://wa.me/6281336578058" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-2 px-4 rounded-xl transition-all shadow-lg transform hover:scale-105 pointer-events-auto">
-                    <!-- Icon WhatsApp -->
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                     0813-3657-8058
                 </a>
             </div>
         </div>
 
-        <!-- Menu Pilih Metode Kontrol -->
         <div id="control-selection" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-6 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-lg w-full mx-4 transition-all duration-500 flex-col">
             <h2 class="text-2xl font-bold text-white mb-2">Metode Kontrol</h2>
             <p class="text-gray-400 text-sm mb-6">Bagaimana cara Anda ingin menangkap objek?</p>
             
             <div class="grid grid-cols-1 gap-3 mb-4">
                 <button onclick="selectControl(1)" class="bg-gray-800 hover:bg-blue-600 border border-gray-600 text-white font-bold py-3 px-4 rounded-xl text-left transition-all">
-                    👆 <span class="text-lg">Sentuhan Normal</span><br><span class="text-xs font-normal text-gray-300">Tunjuk untuk klik, nonaktifkan (istirahat) dengan 2 jari lurus (✌️).</span>
+                    👆 <span class="text-lg">Sentuhan Normal (Paling Ringan)</span><br><span class="text-xs font-normal text-gray-300">Tunjuk untuk klik, nonaktifkan dengan 2 jari lurus (✌️).</span>
                 </button>
                 <button onclick="selectControl(2)" class="bg-gray-800 hover:bg-blue-600 border border-gray-600 text-white font-bold py-3 px-4 rounded-xl text-left transition-all">
                     😁 <span class="text-lg">Senyum untuk Klik</span><br><span class="text-xs font-normal text-gray-300">Arahkan jari telunjuk, lalu tersenyum lebar untuk menangkap.</span>
@@ -117,7 +80,6 @@
             </div>
         </div>
 
-        <!-- Menu Pilih Mode Permainan -->
         <div id="mode-selection" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-6 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-lg w-full mx-4 transition-all duration-500 flex-col">
             <h2 class="text-2xl font-bold text-white mb-2">Pilih Mode Permainan</h2>
             <p class="text-gray-400 text-sm mb-6">Apa yang ingin Anda tangkap hari ini?</p>
@@ -138,31 +100,22 @@
             </div>
         </div>
 
-        <!-- Menu Pilih Target Spesifik -->
         <div id="target-selection" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-6 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-xl w-full mx-4 transition-all duration-500 max-h-[90vh] flex-col">
             <h2 id="target-title" class="text-2xl font-bold text-white mb-2">Pilih Target Anda</h2>
             <p class="text-gray-400 text-sm mb-4">Pilih satu target utama untuk ditangkap.</p>
             
-            <div id="target-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-3 overflow-y-auto custom-scrollbar p-2 mb-4 max-h-[60vh]">
-                <!-- Tombol Target akan dimuat di sini menggunakan Javascript -->
-            </div>
+            <div id="target-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-3 overflow-y-auto custom-scrollbar p-2 mb-4 max-h-[60vh]"></div>
 
             <button onclick="backToModeSelection()" id="back-btn" class="mt-2 text-gray-400 hover:text-white text-sm underline pb-2">Kembali Pilih Mode</button>
-
-            <p id="loading-text" class="text-yellow-400 mt-2 text-sm hidden font-semibold animate-pulse">
-                Menghidupkan Kamera & AI (Mohon tunggu)...
-            </p>
+            <p id="loading-text" class="text-yellow-400 mt-2 text-sm hidden font-semibold animate-pulse">Menghidupkan Kamera & AI (Mohon tunggu)...</p>
         </div>
 
-        <!-- HUD: Skor, Target & Indikator Timer -->
         <div id="hud" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start hidden">
             <div class="flex gap-4">
-                <!-- Papan Target -->
                 <div class="bg-blue-900 bg-opacity-80 backdrop-blur-md rounded-2xl p-4 border border-blue-500 shadow-lg min-w-[100px] text-center flex flex-col items-center justify-center">
                     <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest mb-1">TARGET</p>
                     <div id="target-display" class="text-3xl font-black text-white">A</div>
                 </div>
-                <!-- Papan Skor -->
                 <div class="bg-gray-900 bg-opacity-75 backdrop-blur-md rounded-2xl p-4 border border-gray-700 shadow-lg min-w-[100px] text-center">
                     <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">SKOR</p>
                     <p id="score-display" class="text-4xl font-black text-white transition-colors duration-300">0</p>
@@ -170,22 +123,16 @@
             </div>
             
             <div class="flex flex-col gap-2 items-end">
-                <!-- Papan Timer -->
                 <div id="timer-box" class="bg-gray-900 bg-opacity-75 backdrop-blur-md rounded-2xl p-3 border border-gray-700 shadow-lg min-w-[100px] text-center">
                     <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">WAKTU</p>
                     <p id="timer-display" class="text-3xl font-mono font-bold text-yellow-400">03:00</p>
                 </div>
-                <button onclick="exitFullscreenAndReload()" class="bg-red-500 bg-opacity-80 text-white text-xs font-bold px-3 py-2 rounded-xl pointer-events-auto hover:bg-red-600 shadow-lg backdrop-blur-md transition-transform hover:scale-105 mt-1">
-                    Akhiri Game
-                </button>
+                <button onclick="exitFullscreenAndReload()" class="bg-red-500 bg-opacity-80 text-white text-xs font-bold px-3 py-2 rounded-xl pointer-events-auto hover:bg-red-600 shadow-lg backdrop-blur-md transition-transform hover:scale-105 mt-1">Akhiri Game</button>
             </div>
         </div>
 
-        <!-- Layar Game Over -->
         <div id="game-over" class="hidden pointer-events-auto bg-gray-900 bg-opacity-95 p-8 rounded-3xl shadow-2xl text-center backdrop-blur-md border border-gray-700 max-w-md w-full mx-4 transform scale-105">
-            <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500 mb-2">
-                WAKTU HABIS!
-            </h1>
+            <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-500 mb-2">WAKTU HABIS!</h1>
             <p class="text-gray-300 mb-6 text-lg">Permainan Selesai.</p>
             
             <div class="bg-gray-800 p-6 rounded-2xl mb-6 border border-gray-700">
@@ -193,19 +140,15 @@
                 <p id="final-score" class="text-6xl font-black text-white">0</p>
             </div>
 
-            <button onclick="exitFullscreenAndReload()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-all transform hover:scale-105 active:scale-95 text-xl">
-                Main Lagi
-            </button>
+            <button onclick="exitFullscreenAndReload()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-all transform hover:scale-105 active:scale-95 text-xl">Main Lagi</button>
         </div>
 
     </div>
 
-    <!-- Elemen Media -->
     <video id="webcam" autoplay playsinline></video>
     <canvas id="game-canvas"></canvas>
 
     <script>
-        // --- DEKLARASI ELEMEN ---
         const videoElement = document.getElementById('webcam');
         const canvasElement = document.getElementById('game-canvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -226,70 +169,39 @@
         const finalScoreDisplay = document.getElementById('final-score');
         const backBtn = document.getElementById('back-btn');
 
-        // --- SISTEM SUARA (WEB AUDIO API) ---
         let audioCtx;
-        
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function playCorrectSound() {
             if(!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.type = 'sine';
-            const now = audioCtx.currentTime;
-            
-            osc.frequency.setValueAtTime(523.25, now); // C5
-            osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
-            osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
-            
-            gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-            
-            osc.start(now);
-            osc.stop(now + 0.4);
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            osc.type = 'sine'; const now = audioCtx.currentTime;
+            osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.1); osc.frequency.setValueAtTime(783.99, now + 0.2);
+            gainNode.gain.setValueAtTime(0, now); gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now); osc.stop(now + 0.4);
         }
 
         function playWrongSound() {
             if(!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.type = 'square'; 
-            const now = audioCtx.currentTime;
-            
-            osc.frequency.setValueAtTime(150, now);
-            osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
-            
-            gainNode.gain.setValueAtTime(0.5, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-            
-            osc.start(now);
-            osc.stop(now + 0.4);
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            osc.type = 'square'; const now = audioCtx.currentTime;
+            osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+            gainNode.gain.setValueAtTime(0.5, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now); osc.stop(now + 0.4);
         }
 
-        // --- KONSTANTA & DATA PERMAINAN ---
         const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
         const NUMBERS = Array.from({length: 31}, (_, i) => i.toString());
         const COLORS = [
-            { id: 'Merah', hex: '#ef4444' }, { id: 'Biru', hex: '#3b82f6' },
-            { id: 'Hijau', hex: '#22c55e' }, { id: 'Kuning', hex: '#eab308' },
-            { id: 'Ungu', hex: '#a855f7' }, { id: 'Oranye', hex: '#f97316' },
-            { id: 'Pink', hex: '#ec4899' }, { id: 'Putih', hex: '#ffffff' },
+            { id: 'Merah', hex: '#ef4444' }, { id: 'Biru', hex: '#3b82f6' }, { id: 'Hijau', hex: '#22c55e' }, { id: 'Kuning', hex: '#eab308' },
+            { id: 'Ungu', hex: '#a855f7' }, { id: 'Oranye', hex: '#f97316' }, { id: 'Pink', hex: '#ec4899' }, { id: 'Putih', hex: '#ffffff' },
             { id: 'Abu-abu', hex: '#6b7280' }, { id: 'Coklat', hex: '#78350f' }
         ];
 
@@ -298,29 +210,17 @@
         let score = 0;
         let targetData = null; 
         let timeRemaining = 180; 
+        let bubbles = []; let particles = []; let indexFingerTips = []; 
+        let lastFrameTime = performance.now(); let spawnTimer = 0;
         
-        let bubbles = [];
-        let particles = [];
-        let indexFingerTips = []; 
-        let lastFrameTime = performance.now();
-        let spawnTimer = 0;
-        
-        // Variabel AI & Wajah
         let selectedControlMethod = 1; 
-        let isSmiling = false;
-        let isMouthOpen = false;
-        let isBlinking = false;
+        let isSmiling = false; let isMouthOpen = false; let isBlinking = false;
         
-        // Status Sinkronisasi Kamera & AI
-        let faceReady = false;
-        let handsReady = false;
+        // Perbaikan Status AI
+        let faceReady = false; let handsReady = false;
 
-        function resizeCanvas() {
-            canvasElement.width = window.innerWidth;
-            canvasElement.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        function resizeCanvas() { canvasElement.width = window.innerWidth; canvasElement.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
         function requestFullScreen() {
             const docElm = document.documentElement;
@@ -335,167 +235,99 @@
             setTimeout(() => location.reload(), 300);
         }
 
-        // --- LOGIKA UI ALUR MENU ---
         document.getElementById('start-btn').addEventListener('click', () => {
-            initAudio(); 
-            requestFullScreen();
-            startMenu.style.display = 'none';
-            controlSelectionMenu.style.display = 'flex'; 
+            initAudio(); requestFullScreen();
+            startMenu.style.display = 'none'; controlSelectionMenu.style.display = 'flex'; 
         });
 
         function selectControl(method) {
-            initAudio();
-            selectedControlMethod = method;
-            controlSelectionMenu.style.display = 'none';
-            modeSelectionMenu.style.display = 'flex'; 
+            initAudio(); selectedControlMethod = method;
+            controlSelectionMenu.style.display = 'none'; modeSelectionMenu.style.display = 'flex'; 
         }
 
         function selectMode(mode) {
-            initAudio();
-            currentMode = mode;
-            modeSelectionMenu.style.display = 'none';
-            targetSelectionMenu.style.display = 'flex';
-            
+            initAudio(); currentMode = mode;
+            modeSelectionMenu.style.display = 'none'; targetSelectionMenu.style.display = 'flex';
             const titleEl = document.getElementById('target-title');
             if(mode === 'huruf') titleEl.innerText = "Pilih Huruf Target";
             else if(mode === 'angka') titleEl.innerText = "Pilih Angka Target";
             else if(mode === 'warna') titleEl.innerText = "Pilih Warna Target";
-
             populateTargetGrid();
         }
 
-        function backToModeSelection() {
-            targetSelectionMenu.style.display = 'none';
-            modeSelectionMenu.style.display = 'flex';
-        }
+        function backToModeSelection() { targetSelectionMenu.style.display = 'none'; modeSelectionMenu.style.display = 'flex'; }
 
         function populateTargetGrid() {
-            targetGrid.innerHTML = '';
-            let items = [];
-            
-            if (currentMode === 'huruf') items = ALPHABET;
-            else if (currentMode === 'angka') items = NUMBERS;
-            else if (currentMode === 'warna') items = COLORS;
-
+            targetGrid.innerHTML = ''; let items = [];
+            if (currentMode === 'huruf') items = ALPHABET; else if (currentMode === 'angka') items = NUMBERS; else if (currentMode === 'warna') items = COLORS;
             targetGrid.className = `grid gap-3 overflow-y-auto custom-scrollbar p-2 mb-4 max-h-[60vh] ${currentMode === 'angka' ? 'grid-cols-5 sm:grid-cols-7' : 'grid-cols-4 sm:grid-cols-6'}`;
 
             items.forEach(item => {
                 const btn = document.createElement('button');
                 btn.className = "bg-gray-800 border border-gray-600 hover:bg-blue-600 hover:border-blue-400 text-white font-bold py-3 rounded-xl transition-all shadow-sm transform hover:scale-110 active:scale-95 flex flex-col items-center justify-center min-h-[60px]";
-                
                 if (currentMode === 'warna') {
                     btn.innerHTML = `<div class="w-8 h-8 rounded-full shadow-inner mb-1 border border-gray-400" style="background-color: ${item.hex}"></div><span class="text-[10px] uppercase">${item.id}</span>`;
                     btn.onclick = () => selectFinalTarget(item); 
                 } else {
-                    btn.innerText = item;
-                    btn.className += " text-xl";
-                    btn.onclick = () => selectFinalTarget(item); 
+                    btn.innerText = item; btn.className += " text-xl"; btn.onclick = () => selectFinalTarget(item); 
                 }
-                
                 targetGrid.appendChild(btn);
             });
         }
 
         function selectFinalTarget(target) {
-            initAudio();
-            targetData = target;
-            
+            initAudio(); targetData = target;
             targetDisplay.innerHTML = '';
-            if (currentMode === 'warna') {
-                targetDisplay.innerHTML = `<div class="w-10 h-10 rounded-full shadow-lg border-2 border-white" style="background-color: ${target.hex}"></div>`;
-            } else {
-                targetDisplay.innerText = target;
-            }
+            if (currentMode === 'warna') { targetDisplay.innerHTML = `<div class="w-10 h-10 rounded-full shadow-lg border-2 border-white" style="background-color: ${target.hex}"></div>`; } 
+            else { targetDisplay.innerText = target; }
             
-            targetGrid.style.display = 'none';
-            backBtn.style.display = 'none';
+            targetGrid.style.display = 'none'; backBtn.style.display = 'none';
             document.querySelector('#target-selection h2').innerText = "Mempersiapkan AI...";
             document.querySelector('#target-selection p').style.display = 'none';
             loadingText.style.display = 'block';
 
-            camera.start().catch(err => {
-                alert("Gagal mengakses kamera. Pastikan memberikan izin!");
-                location.reload();
-            });
+            camera.start().catch(err => { alert("Gagal mengakses kamera. Pastikan memberikan izin!"); location.reload(); });
         }
 
         function startGamePlay() {
-            loadingText.style.display = 'none';
-            targetSelectionMenu.style.display = 'none';
-            hud.style.display = 'flex';
-            
-            isGameRunning = true;
-            score = 0;
-            timeRemaining = 180;
-            bubbles = [];
-            updateScoreDisplay();
-            lastFrameTime = performance.now();
+            loadingText.style.display = 'none'; targetSelectionMenu.style.display = 'none'; hud.style.display = 'flex';
+            isGameRunning = true; score = 0; timeRemaining = 180; bubbles = [];
+            updateScoreDisplay(); lastFrameTime = performance.now();
         }
 
         function showGameOverScreen() {
-            isGameRunning = false;
-            hud.style.display = 'none';
-            gameOverScreen.style.display = 'block';
-            finalScoreDisplay.innerText = score;
-            if(score < 0) finalScoreDisplay.classList.replace('text-white', 'text-red-500');
+            isGameRunning = false; hud.style.display = 'none'; gameOverScreen.style.display = 'block';
+            finalScoreDisplay.innerText = score; if(score < 0) finalScoreDisplay.classList.replace('text-white', 'text-red-500');
         }
 
         function formatTime(seconds) {
-            const m = Math.floor(seconds / 60);
-            const s = Math.floor(seconds % 60);
+            const m = Math.floor(seconds / 60); const s = Math.floor(seconds % 60);
             return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // --- LOGIKA GAME (SPAWN & COLLISION) ---
         function spawnBubble() {
-            let isTargetObj = Math.random() < 0.35; 
-            let spawnedData;
-            
+            let isTargetObj = Math.random() < 0.35; let spawnedData;
             if (currentMode === 'huruf') {
-                if (isTargetObj) {
-                    spawnedData = targetData;
-                } else {
-                    do {
-                        spawnedData = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
-                    } while (spawnedData.toUpperCase() === targetData.toUpperCase());
-                }
+                if (isTargetObj) { spawnedData = targetData; } 
+                else { do { spawnedData = ALPHABET[Math.floor(Math.random() * ALPHABET.length)]; } while (spawnedData.toUpperCase() === targetData.toUpperCase()); }
                 if (Math.random() < 0.5) spawnedData = spawnedData.toLowerCase(); 
             } 
             else if (currentMode === 'angka') {
-                if (isTargetObj) {
-                    spawnedData = targetData;
-                } else {
-                    do {
-                        spawnedData = NUMBERS[Math.floor(Math.random() * NUMBERS.length)];
-                    } while (spawnedData === targetData);
-                }
+                if (isTargetObj) { spawnedData = targetData; } 
+                else { do { spawnedData = NUMBERS[Math.floor(Math.random() * NUMBERS.length)]; } while (spawnedData === targetData); }
             }
             else if (currentMode === 'warna') {
-                if (isTargetObj) {
-                    spawnedData = targetData;
-                } else {
-                    do {
-                        spawnedData = COLORS[Math.floor(Math.random() * COLORS.length)];
-                    } while (spawnedData.id === targetData.id);
-                }
+                if (isTargetObj) { spawnedData = targetData; } 
+                else { do { spawnedData = COLORS[Math.floor(Math.random() * COLORS.length)]; } while (spawnedData.id === targetData.id); }
             }
-
             const radius = currentMode === 'warna' ? Math.random() * 10 + 35 : Math.random() * 15 + 35; 
-            
             bubbles.push({
-                x: Math.random() * (canvasElement.width - radius * 2) + radius,
-                y: -radius - 50,
-                radius: radius,
-                data: spawnedData,
-                isTarget: isTargetObj,
-                speedY: Math.random() * 3 + 3, 
-                speedX: (Math.random() - 0.5) * 2,
-                rotation: 0,
-                rotSpeed: (Math.random() - 0.5) * 0.1
+                x: Math.random() * (canvasElement.width - radius * 2) + radius, y: -radius - 50, radius: radius,
+                data: spawnedData, isTarget: isTargetObj, speedY: Math.random() * 3 + 3, speedX: (Math.random() - 0.5) * 2, rotation: 0, rotSpeed: (Math.random() - 0.5) * 0.1
             });
         }
 
-        // --- SISTEM MEDIA PIPE (AI) ---
+        // --- SISTEM MEDIA PIPE (DIOPTIMALKAN) ---
         const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
         faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: false, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
@@ -503,29 +335,20 @@
             faceReady = true;
             if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
                 const landmarks = results.multiFaceLandmarks[0];
-                
-                // Senyum
                 const mouthWidth = Math.hypot(landmarks[61].x - landmarks[291].x, landmarks[61].y - landmarks[291].y);
                 const faceWidth = Math.hypot(landmarks[234].x - landmarks[454].x, landmarks[234].y - landmarks[454].y);
                 isSmiling = (mouthWidth / faceWidth) > 0.40;
 
-                // Buka Mulut
                 const mouthOpenDist = Math.hypot(landmarks[13].x - landmarks[14].x, landmarks[13].y - landmarks[14].y);
                 const faceHeight = Math.hypot(landmarks[10].x - landmarks[152].x, landmarks[10].y - landmarks[152].y);
                 isMouthOpen = (mouthOpenDist / faceHeight) > 0.05;
 
-                // Kedipan Mata
                 const leftEyeV = Math.hypot(landmarks[159].x - landmarks[145].x, landmarks[159].y - landmarks[145].y);
                 const leftEyeH = Math.hypot(landmarks[33].x - landmarks[133].x, landmarks[33].y - landmarks[133].y);
                 const rightEyeV = Math.hypot(landmarks[386].x - landmarks[374].x, landmarks[386].y - landmarks[374].y);
                 const rightEyeH = Math.hypot(landmarks[362].x - landmarks[263].x, landmarks[362].y - landmarks[263].y);
-                
                 isBlinking = ((leftEyeV / leftEyeH) < 0.18 || (rightEyeV / rightEyeH) < 0.18);
-            } else {
-                isSmiling = false;
-                isMouthOpen = false;
-                isBlinking = false;
-            }
+            } else { isSmiling = false; isMouthOpen = false; isBlinking = false; }
         });
 
         const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
@@ -538,277 +361,153 @@
                 const canvasRatio = canvasElement.width / canvasElement.height;
                 let drawWidth, drawHeight, startX, startY;
 
-                if (canvasRatio > videoRatio) {
-                    drawWidth = canvasElement.width;
-                    drawHeight = canvasElement.width / videoRatio;
-                    startX = 0; startY = (canvasElement.height - drawHeight) / 2;
-                } else {
-                    drawHeight = canvasElement.height;
-                    drawWidth = canvasElement.height * videoRatio;
-                    startX = (canvasElement.width - drawWidth) / 2; startY = 0;
-                }
+                if (canvasRatio > videoRatio) { drawWidth = canvasElement.width; drawHeight = canvasElement.width / videoRatio; startX = 0; startY = (canvasElement.height - drawHeight) / 2; } 
+                else { drawHeight = canvasElement.height; drawWidth = canvasElement.height * videoRatio; startX = (canvasElement.width - drawWidth) / 2; startY = 0; }
                 
                 let newFingerTips = [];
                 if (results.multiHandLandmarks) {
                     results.multiHandLandmarks.forEach((landmarks) => {
-                        const indexTip = landmarks[8];
-                        const indexPIP = landmarks[6];
-                        const middleTip = landmarks[12];
-                        const middlePIP = landmarks[10];
-                        
+                        const indexTip = landmarks[8]; const indexPIP = landmarks[6]; const middleTip = landmarks[12]; const middlePIP = landmarks[10];
                         let isVSign = (indexTip.y < indexPIP.y && middleTip.y < middlePIP.y);
-                        let fingerActive = false;
-                        let msg = "";
+                        let fingerActive = false; let msg = "";
 
-                        if (selectedControlMethod === 1) {
-                            fingerActive = !isVSign; 
-                            msg = fingerActive ? "AKTIF" : "NON-AKTIF (✌️)";
-                        } else if (selectedControlMethod === 2) {
-                            fingerActive = isSmiling;
-                            msg = fingerActive ? "AKTIF" : "SENYUM!";
-                        } else if (selectedControlMethod === 3) {
-                            fingerActive = isMouthOpen;
-                            msg = fingerActive ? "AKTIF" : "BUKA MULUT!";
-                        } else if (selectedControlMethod === 4) {
-                            fingerActive = isBlinking;
-                            msg = fingerActive ? "AKTIF" : "KEDIP!";
-                        }
+                        if (selectedControlMethod === 1) { fingerActive = !isVSign; msg = fingerActive ? "AKTIF" : "NON-AKTIF (✌️)"; } 
+                        else if (selectedControlMethod === 2) { fingerActive = isSmiling; msg = fingerActive ? "AKTIF" : "SENYUM!"; } 
+                        else if (selectedControlMethod === 3) { fingerActive = isMouthOpen; msg = fingerActive ? "AKTIF" : "BUKA MULUT!"; } 
+                        else if (selectedControlMethod === 4) { fingerActive = isBlinking; msg = fingerActive ? "AKTIF" : "KEDIP!"; }
 
-                        newFingerTips.push({ 
-                            x: (indexTip.x * drawWidth) + startX, 
-                            y: (indexTip.y * drawHeight) + startY,
-                            active: fingerActive,
-                            message: msg
-                        });
+                        newFingerTips.push({ x: (indexTip.x * drawWidth) + startX, y: (indexTip.y * drawHeight) + startY, active: fingerActive, message: msg });
                     });
                 }
-                // Update posisi jari global
                 indexFingerTips = newFingerTips;
             }
 
-            // Validasi mulai game (Menunggu AI Face & Hands siap)
-            if (faceReady && handsReady && loadingText.style.display === 'block' && !isGameRunning) {
+            // Validasi mulai game (LOGIKA YANG DIPERBAIKI)
+            let isFaceNeeded = selectedControlMethod > 1; // Wajah hanya dibutuhkan di mode 2, 3, 4
+            let isReadyToStart = isFaceNeeded ? (faceReady && handsReady) : handsReady;
+
+            if (isReadyToStart && loadingText.style.display === 'block' && !isGameRunning) {
                 startGamePlay();
             }
         });
 
-        // Kunci Anti-Freeze: Mencegah penumpukan antrean pemrosesan kamera
+        // Kunci Anti-Freeze dengan Optimasi Performa
         let isProcessingCamera = false;
         const camera = new Camera(videoElement, { 
             onFrame: async () => { 
-                if (isProcessingCamera) return; // Jika AI masih sibuk, lewatkan frame ini
+                if (isProcessingCamera) return; 
                 isProcessingCamera = true;
                 try {
-                    await Promise.all([
-                        faceMesh.send({image: videoElement}),
-                        hands.send({image: videoElement})
-                    ]);
+                    // Hanya jalankan pemrosesan Wajah jika pengguna memilih kontrol yang butuh wajah
+                    if (selectedControlMethod > 1) {
+                        await faceMesh.send({image: videoElement});
+                    }
+                    // Selalu jalankan pemrosesan Tangan
+                    await hands.send({image: videoElement});
                 } catch (error) {
                     console.error("AI Error:", error);
                 } finally {
                     isProcessingCamera = false;
                 }
             }, 
-            width: 1280, 
-            height: 720 
+            // Turunkan resolusi AI ke 480p agar SANGAT RINGAN, visual game tetap mulus menutupi layar
+            width: 640, 
+            height: 480 
         });
 
-        // --- RENDER GAME LOOP TERPISAH (Agar Grafis Mulus 60FPS) ---
         function renderLoop() {
             requestAnimationFrame(renderLoop);
-
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-            // Menggambar feed dari kamera secara langsung independen dari AI
             if (videoElement.readyState >= 2) {
                 const videoRatio = videoElement.videoWidth / videoElement.videoHeight;
                 const canvasRatio = canvasElement.width / canvasElement.height;
                 let drawWidth, drawHeight, startX, startY;
-
-                if (canvasRatio > videoRatio) {
-                    drawWidth = canvasElement.width;
-                    drawHeight = canvasElement.width / videoRatio;
-                    startX = 0; startY = (canvasElement.height - drawHeight) / 2;
-                } else {
-                    drawHeight = canvasElement.height;
-                    drawWidth = canvasElement.height * videoRatio;
-                    startX = (canvasElement.width - drawWidth) / 2; startY = 0;
-                }
+                if (canvasRatio > videoRatio) { drawWidth = canvasElement.width; drawHeight = canvasElement.width / videoRatio; startX = 0; startY = (canvasElement.height - drawHeight) / 2; } 
+                else { drawHeight = canvasElement.height; drawWidth = canvasElement.height * videoRatio; startX = (canvasElement.width - drawWidth) / 2; startY = 0; }
                 canvasCtx.drawImage(videoElement, startX, startY, drawWidth, drawHeight);
             }
 
-            if (isGameRunning) {
-                updateAndDrawGame();
-            }
-
+            if (isGameRunning) updateAndDrawGame();
             canvasCtx.restore();
         }
-
-        // Hidupkan mesin grafis
         renderLoop();
 
         // --- RENDER GAME UTAMA ---
         function updateAndDrawGame() {
-            const now = performance.now();
-            const dt = (now - lastFrameTime) / 1000;
-            lastFrameTime = now;
+            const now = performance.now(); const dt = (now - lastFrameTime) / 1000; lastFrameTime = now;
 
             timeRemaining -= dt;
             if (timeRemaining <= 0) { timeRemaining = 0; showGameOverScreen(); return; }
             
             timerDisplay.innerText = formatTime(timeRemaining);
-            if (timeRemaining < 10) {
-                timerBox.classList.add('border-red-500');
-                timerDisplay.classList.add('text-red-500');
-                timerDisplay.classList.remove('text-yellow-400');
-            }
+            if (timeRemaining < 10) { timerBox.classList.add('border-red-500'); timerDisplay.classList.add('text-red-500'); timerDisplay.classList.remove('text-yellow-400'); }
 
-            spawnTimer += dt;
-            if (spawnTimer > 0.8) { spawnBubble(); spawnTimer = 0; }
+            spawnTimer += dt; if (spawnTimer > 0.8) { spawnBubble(); spawnTimer = 0; }
 
-            // Bubble Logic
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 let b = bubbles[i];
-                
-                // Kalkulasi pergerakan yang aman dari freeze (dikali 60 agar sesuai dengan frame rate)
-                b.y += b.speedY * (dt * 60);
-                b.x += b.speedX * (dt * 60);
-                b.rotation += b.rotSpeed * (dt * 60);
-
+                b.y += b.speedY * (dt * 60); b.x += b.speedX * (dt * 60); b.rotation += b.rotSpeed * (dt * 60);
                 if (b.x < b.radius || b.x > canvasElement.width - b.radius) b.speedX *= -1;
 
                 let isTouched = false;
                 for (let pointer of indexFingerTips) {
-                    if (Math.hypot(pointer.x - b.x, pointer.y - b.y) < b.radius + 15) { 
-                        if (pointer.active) {
-                            isTouched = true; 
-                            break; 
-                        }
-                    }
+                    if (Math.hypot(pointer.x - b.x, pointer.y - b.y) < b.radius + 15) { if (pointer.active) { isTouched = true; break; } }
                 }
 
                 if (isTouched) {
                     if (b.isTarget) {
-                        playCorrectSound();
-                        score += 10;
-                        showFloatingText(b.x, b.y, "+10", true);
+                        playCorrectSound(); score += 10; showFloatingText(b.x, b.y, "+10", true);
                         createParticles(b.x, b.y, currentMode === 'warna' ? b.data.hex : '#4ade80');
                     } else {
-                        playWrongSound();
-                        score -= 10;
-                        showFloatingText(b.x, b.y, "-10", false);
+                        playWrongSound(); score -= 10; showFloatingText(b.x, b.y, "-10", false);
                         createParticles(b.x, b.y, '#ef4444'); 
-                        canvasCtx.fillStyle = 'rgba(255, 0, 0, 0.4)'; 
-                        canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+                        canvasCtx.fillStyle = 'rgba(255, 0, 0, 0.4)'; canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
                     }
-                    
-                    updateScoreDisplay();
-                    bubbles.splice(i, 1);
-                    continue;
+                    updateScoreDisplay(); bubbles.splice(i, 1); continue;
                 }
 
                 if (b.y > canvasElement.height + b.radius) { bubbles.splice(i, 1); continue; }
 
-                // RENDER BUBBLE
-                canvasCtx.save();
-                canvasCtx.translate(b.x, b.y);
-                canvasCtx.rotate(b.rotation);
-                
+                canvasCtx.save(); canvasCtx.translate(b.x, b.y); canvasCtx.rotate(b.rotation);
                 if (currentMode === 'warna') {
-                    canvasCtx.beginPath();
-                    canvasCtx.arc(0, 0, b.radius, 0, Math.PI * 2);
-                    canvasCtx.fillStyle = b.data.hex;
-                    canvasCtx.fill();
-                    canvasCtx.lineWidth = 4;
-                    canvasCtx.strokeStyle = '#ffffff';
-                    canvasCtx.stroke();
-                    
-                    canvasCtx.beginPath();
-                    canvasCtx.arc(-b.radius*0.3, -b.radius*0.3, b.radius*0.3, 0, Math.PI * 2);
-                    canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                    canvasCtx.fill();
+                    canvasCtx.beginPath(); canvasCtx.arc(0, 0, b.radius, 0, Math.PI * 2); canvasCtx.fillStyle = b.data.hex; canvasCtx.fill();
+                    canvasCtx.lineWidth = 4; canvasCtx.strokeStyle = '#ffffff'; canvasCtx.stroke();
+                    canvasCtx.beginPath(); canvasCtx.arc(-b.radius*0.3, -b.radius*0.3, b.radius*0.3, 0, Math.PI * 2); canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.4)'; canvasCtx.fill();
                 } else {
-                    canvasCtx.beginPath();
-                    canvasCtx.arc(0, 0, b.radius, 0, Math.PI * 2);
-                    canvasCtx.fillStyle = 'rgba(30, 64, 175, 0.6)';
-                    canvasCtx.fill();
-                    canvasCtx.lineWidth = 3;
-                    canvasCtx.strokeStyle = 'rgba(96, 165, 250, 0.9)';
-                    canvasCtx.stroke();
-                    
-                    canvasCtx.beginPath();
-                    canvasCtx.arc(-b.radius*0.3, -b.radius*0.3, b.radius*0.3, 0, Math.PI * 2);
-                    canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                    canvasCtx.fill();
-
-                    // Teks dalam gelembung
-                    canvasCtx.scale(-1, 1); // Anti-mirror
-                    canvasCtx.fillStyle = '#ffffff';
-                    canvasCtx.font = `bold ${b.radius}px 'Segoe UI', Arial`;
-                    canvasCtx.textAlign = 'center';
-                    canvasCtx.textBaseline = 'middle';
-                    canvasCtx.shadowColor = 'rgba(0,0,0,0.8)';
-                    canvasCtx.shadowBlur = 5;
-                    canvasCtx.fillText(b.data, 0, 0);
+                    canvasCtx.beginPath(); canvasCtx.arc(0, 0, b.radius, 0, Math.PI * 2); canvasCtx.fillStyle = 'rgba(30, 64, 175, 0.6)'; canvasCtx.fill();
+                    canvasCtx.lineWidth = 3; canvasCtx.strokeStyle = 'rgba(96, 165, 250, 0.9)'; canvasCtx.stroke();
+                    canvasCtx.beginPath(); canvasCtx.arc(-b.radius*0.3, -b.radius*0.3, b.radius*0.3, 0, Math.PI * 2); canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.3)'; canvasCtx.fill();
+                    canvasCtx.scale(-1, 1); canvasCtx.fillStyle = '#ffffff'; canvasCtx.font = `bold ${b.radius}px 'Segoe UI', Arial`; canvasCtx.textAlign = 'center'; canvasCtx.textBaseline = 'middle';
+                    canvasCtx.shadowColor = 'rgba(0,0,0,0.8)'; canvasCtx.shadowBlur = 5; canvasCtx.fillText(b.data, 0, 0);
                 }
                 canvasCtx.restore();
             }
 
-            // Render Partikel
             for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx * (dt * 60); 
-                p.y += p.vy * (dt * 60); 
-                p.life -= dt * 3.0; 
+                let p = particles[i]; p.x += p.vx * (dt * 60); p.y += p.vy * (dt * 60); p.life -= dt * 3.0; 
                 if (p.life <= 0) { particles.splice(i, 1); continue; }
-                canvasCtx.globalAlpha = p.life;
-                canvasCtx.beginPath();
-                canvasCtx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-                canvasCtx.fillStyle = p.color;
-                canvasCtx.fill();
+                canvasCtx.globalAlpha = p.life; canvasCtx.beginPath(); canvasCtx.arc(p.x, p.y, 6, 0, Math.PI * 2); canvasCtx.fillStyle = p.color; canvasCtx.fill();
             }
             canvasCtx.globalAlpha = 1.0;
 
-            // Render Jari & Indikator Teks
             for (let pointer of indexFingerTips) {
-                canvasCtx.beginPath();
-                canvasCtx.arc(pointer.x, pointer.y, 18, 0, Math.PI * 2);
-                
+                canvasCtx.beginPath(); canvasCtx.arc(pointer.x, pointer.y, 18, 0, Math.PI * 2);
                 if (pointer.active) {
-                    canvasCtx.fillStyle = 'rgba(56, 189, 248, 0.8)';
-                    canvasCtx.fill();
-                    canvasCtx.lineWidth = 4;
-                    canvasCtx.strokeStyle = '#ffffff';
-                    canvasCtx.shadowColor = '#38bdf8';
-                    canvasCtx.shadowBlur = 15;
-                    canvasCtx.stroke();
+                    canvasCtx.fillStyle = 'rgba(56, 189, 248, 0.8)'; canvasCtx.fill(); canvasCtx.lineWidth = 4;
+                    canvasCtx.strokeStyle = '#ffffff'; canvasCtx.shadowColor = '#38bdf8'; canvasCtx.shadowBlur = 15; canvasCtx.stroke();
                 } else {
-                    canvasCtx.fillStyle = 'rgba(156, 163, 175, 0.3)';
-                    canvasCtx.fill();
-                    canvasCtx.lineWidth = 2;
-                    canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                    canvasCtx.stroke();
+                    canvasCtx.fillStyle = 'rgba(156, 163, 175, 0.3)'; canvasCtx.fill(); canvasCtx.lineWidth = 2;
+                    canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; canvasCtx.stroke();
                 }
                 canvasCtx.shadowBlur = 0; 
-                
-                canvasCtx.beginPath();
-                canvasCtx.arc(pointer.x, pointer.y, 4, 0, Math.PI * 2);
-                canvasCtx.fillStyle = pointer.active ? '#ffffff' : 'rgba(255,255,255,0.5)';
-                canvasCtx.fill();
+                canvasCtx.beginPath(); canvasCtx.arc(pointer.x, pointer.y, 4, 0, Math.PI * 2);
+                canvasCtx.fillStyle = pointer.active ? '#ffffff' : 'rgba(255,255,255,0.5)'; canvasCtx.fill();
 
-                canvasCtx.save();
-                canvasCtx.translate(pointer.x, pointer.y - 35); 
-                canvasCtx.scale(-1, 1); 
-                
-                canvasCtx.fillStyle = pointer.active ? '#4ade80' : '#f87171';
-                canvasCtx.font = "bold 14px 'Segoe UI', Arial";
-                canvasCtx.textAlign = "center";
-                
-                canvasCtx.shadowColor = 'rgba(0,0,0,1)';
-                canvasCtx.shadowBlur = 6;
-                canvasCtx.fillText(pointer.message, 0, 0);
-                
+                canvasCtx.save(); canvasCtx.translate(pointer.x, pointer.y - 35); canvasCtx.scale(-1, 1); 
+                canvasCtx.fillStyle = pointer.active ? '#4ade80' : '#f87171'; canvasCtx.font = "bold 14px 'Segoe UI', Arial"; canvasCtx.textAlign = "center";
+                canvasCtx.shadowColor = 'rgba(0,0,0,1)'; canvasCtx.shadowBlur = 6; canvasCtx.fillText(pointer.message, 0, 0);
                 canvasCtx.restore();
             }
         }
